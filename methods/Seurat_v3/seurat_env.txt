@@ -1,0 +1,28 @@
+# command line
+
+conda create -n seurat r-essentials r-base
+
+conda activate seurat
+
+# devtools:
+conda install -y -c conda-forge r-devtools
+conda install -y igraph hdf5
+
+conda install -c conda-forge r-rgeos
+
+R
+install.packages('IRkernel')
+IRkernel::installspec(name = 'seurat', displayname = 'rseurat')
+
+install.packages("BiocManager")
+BiocManager::install(c("GenomeInfoDb","IRanges", "Rsamtools", "S4Vectors", "BiocGenerics"))
+remotes::install_version("RSQLite", version = "2.2.5")
+BiocManager::install(c("EnsDb.Hsapiens.v86","biovizBase"))
+BiocManager::install(c("BSgenome.Hsapiens.UCSC.hg38"))
+install.packages("Seurat") 
+devtools::install_github('satijalab/seurat-data')
+remotes::install_github("mojaveazure/seurat-disk")
+
+install.packages("Signac") 
+install.packages('qlcMatrix')
+
