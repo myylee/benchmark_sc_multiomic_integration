@@ -1,18 +1,31 @@
-# benchmark_sc_multiomic_integration
+# Benchmarking algorithms for joint integration of unpaired and paired single-cell RNA-seq and ATAC-seq data
+
+Michelle Y. Y. Lee, Klaus H. Kaestner, Mingyao Li
+
 
 ## Global environment setup 
- ### set up the python and R environment (scib + R)
+Set up the python and R environment (scib + R)
 
 ## Method specific environment 
- ### guidance for setting up one environment for each method (use the env file)
- ### description for running each method (.py or .R code)
+- Guidance for setting up one environment for each method (use the env file)
+- Description for running each method (.py or .R code)
 
 ## Sceanrios
- ### 3 sceanrios, breif description
- ### For each sceanrio:
-  #### Simulation 
+3 sceanrios, breif description
 
+### Sceanrio 1
+- Simulation 
 - Run method 
-
 - Evaluation 
+
+### Sceanrio 2
+- Simulation 
+- Run method 
+- Evaluation 
+
+### Sceanrio 3
+- Simulation 
+- Run method 
+- Evaluation 
+
 
