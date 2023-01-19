@@ -1,76 +1,33 @@
 # Benchmarking algorithms for joint integration of unpaired and paired single-cell RNA-seq and ATAC-seq data
 **Michelle Y. Y. Lee, Klaus H. Kaestner, Mingyao Li**
 
-This repository contains codes for data simulation and method evaluation described in this study. We evaluated seven methods at three different sceanrios simulated using two publically available datasets. 
+This repository contains codes for data simulation and method evaluation described in this study. We evaluated seven methods at three types of sceanrios using two publically available datasets. 
 
 ## Benchmarking framework 
 
-For each sceanrio, there are three major steps:
-1. Simulate the data [Python kernel]
-2. Define integration task (run each method with the necessary arguments and setup) and submit as an non-interactive job to computer clusters (e.g. LPC/HPC) [Python kernel] 
-3. Plot integration result [R kernel]
+Codes for data simulation and method evaluation are in evaluate_vary_situations_public.ipynb. 
 
-We have one conda environment for data simulation and performance evaluation. Codes associated with data simulation are in jupyter notebooks under python environment, with calls to R functions. Codes associated with running each method is also in jupyter notebook in which is submits 
+Codes for generating summary plots are in summary_metric_plot_public.ipynb. 
 
-Default: we used HPC to submit each integration task as one job, with 8 cores and 32 GB of RAM. 
+Each file is separated into three major sceanrios and a total of eleven challenges. For each challenge, first two steps are in evaluate_vary_situations_public.ipynb. First, data is simulated. Secondly, a list of methods are run and the performance is calculated. To generate a summary plot for each challenge, follow the steps in  summary_metric_plot_public.ipynb, which is again separated into the same three sceanrios and eleven challenges. 
 
-## Method-specific environment setup and execution
-The list of methods evaluated are under the 'methods' folder. Each subfolder contains files related to one method. 
+## Setup 
+To run the methods as specified in the step above, one needs to create a conda environment for each method and install all the necessary packages. 
 
-Installation 
-- Option 1: run the '.*_env.txt' file line-by-line in linux and R to install the method and its dependencies. One conda environment is created for each method.
+### Method-specific environment setup and execution
+The list of methods evaluated are under the **methods** folder. Each subfolder contains files related to one method. 
+
+Installation (one conda environment is created for each method) 
+- Option 1: run the '.*_env.txt' file line-by-line in linux and R to install the method and its dependencies. 
 - Option 2: install using the .yml file to create the conda environment. E.g. run the code below to install the conda environment to run Seurat v4 or Seurat v3. 
     ```
     conda env create -f seurat.yml
     ```
+### Global environment setup 
+Install this environment to run two benchmarking jupyter notebooks. 
 
+## Data 
+Proceesed source data and reference files used during data simulation and evaluations are in the **dataset** folder. 
 
-Execution 
-- Function(s) to run the method. The function can be called by a bash script or from linux terminal. The function accepts requires 2 or 3 arguments (depending on if the number of clusters need to be specified).
-    - Inputs:
-        - in_dir
-        - out_dir
-        - ncluster
-    - Outputs: 
-        - 
+Scripts used to generate these files can be found in **XXX**. 
 
-## Evaluation
-- Eval single
-- Eval fair 
-
-
-## Plotting 
-- Summary plot 
-- UMAP plot
-
-## Dataset preparation 
-- PBMC
-- BMMC
-
----
-# Extras! [To be removed]
-## Sceanrios
-3 sceanrios, breif description
-
-### Sceanrio 1
-- Simulation 
-- Run method 
-- Evaluation 
-
-### Sceanrio 2
-- Simulation 
-- Run method 
-- Evaluation 
-
-### Sceanrio 3
-- Simulation 
-- Run method 
-- Evaluation 
-
-
-
-Notes:
-- One giant jupyter notebook script for data simulation and method execution 
-- one giant jupyter notebook with R kernel for plotting summary plot and (UMAP (maybe?))
-
-- A folder for each source data, with jupyter notebook detailing how the data is preprocessed, pmat tabulated, and peak-gene pair called. 
