@@ -4,7 +4,6 @@
 This repository contains codes for data simulation and method evaluation described in this study. We evaluated seven methods at three different sceanrios simulated using two publically available datasets. 
 
 ## Benchmarking framework 
----
 
 For each sceanrio, there are three major steps:
 1. Simulate the data [Python kernel]
@@ -16,7 +15,6 @@ We have one conda environment for data simulation and performance evaluation. Co
 Default: we used HPC to submit each integration task as one job, with 8 cores and 32 GB of RAM. 
 
 ## Method-specific environment setup and execution
----
 The list of methods evaluated are under the 'methods' folder. Each subfolder contains files related to one method. 
 
 Installation 
@@ -37,24 +35,21 @@ Execution
         - 
 
 ## Evaluation
---- 
 - Eval single
 - Eval fair 
 
 
 ## Plotting 
---- 
 - Summary plot 
 - UMAP plot
 
 ## Dataset preparation 
----
 - PBMC
 - BMMC
 
+---
 # Extras! [To be removed]
 ## Sceanrios
----
 3 sceanrios, breif description
 
 ### Sceanrio 1
