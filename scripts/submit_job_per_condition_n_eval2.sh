@@ -3,13 +3,12 @@
 #BSUB -J dweisepytest #LSF Job Name
 #BSUB -q mingyao_normal
 #BSUB -o pytestdweise.%J.txt #Name of the job output file
-###BSUB -e pytestdweise.%J.out #Name of the job error file
 ### -- Default: use 8 cores --
-#BSUB -n 2
+#BSUB -n 8
 ### -- specify that we need 8GB of memory per core/slot --
-#BSUB -R "rusage[mem=8GB]"
+#BSUB -R "span[hosts=1]"
 ### -- specify that we want the job to get killed if it exceeds 16 GB per core/slot --
-#BSUB -M 16GB
+#BSUB -M 32GB
 ### -- send notification at completion --
 #BSUB -N
 
@@ -20,7 +19,7 @@
 Help()
 {
    # Display Help
-   echo "general script to run a python script (with two arguments) under a certain conda env"
+   echo "general script to run a python/R script (with two arguments) under a certain conda env"
    echo
    echo "Syntax: scriptTemplate [-i|w|c|s|p|r|e|f|t|l]"
    echo "options:"

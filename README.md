@@ -23,11 +23,10 @@ Installation (one conda environment is created for each method)
     ```
     conda env create -f seurat.yml
     ```
-### Global environment setup 
-Install this environment to run two benchmarking jupyter notebooks. 
+### Evaluation environment setup 
+Data simulation, evaluation, and plot generation are run after activating the scib2 environment. Details about environment setup can be ofund in the **methods/eval_scib2** folder. 
 
 ## Data 
-Proceesed source data and reference files used during data simulation and evaluations are in the **dataset** folder. 
-
-Scripts used to generate these files can be found in **XXX**. 
+Proceesed source data and reference files used during data simulation and evaluations, as well as scripts to generate these files from raw dataset are in the **dataset** folder [coming soon]. 
+ 
 

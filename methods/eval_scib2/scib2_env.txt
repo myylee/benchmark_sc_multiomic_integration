@@ -1,0 +1,47 @@
+# command line
+
+conda create -n scib2 python=3.7
+
+conda activate scib2
+
+pip install scanpy leidenalg ipykernel
+
+conda install r-essentials r-base
+# devtools:
+conda install -y -c conda-forge r-devtools
+conda install -y igraph hdf5
+
+#pip install scib #(did not work, ilsi calculation error)
+# install through git instead 
+conda install -c anaconda git
+pip install git+https://github.com/theislab/scib.git
+# missing .o file while running scib functions
+conda install -c conda-forge gxx
+cd /home/myylee/anaconda3/envs/scib2/lib/python3.7/site-packages/scib/
+g++ -std=c++11 -O3 knn_graph.cpp -o knn_graph.o
+
+cd ~
+python -m ipykernel install --user --name scib2 --display-name "scib2"
+conda install -c conda-forge r-rgeos
+conda install -c bioconda tabix
+pip install bgzip
+
+R
+install.packages('IRkernel')
+IRkernel::installspec(name = 'scib2', displayname = 'rscib2')
+
+devtools::install_github('theislab/kBET')
+install.packages("BiocManager")
+BiocManager::install(c("GenomeInfoDb","IRanges", "Rsamtools", "S4Vectors", "BiocGenerics"))
+remotes::install_version("RSQLite", version = "2.2.5")
+BiocManager::install(c("EnsDb.Hsapiens.v86","biovizBase"))
+BiocManager::install(c("BSgenome.Hsapiens.UCSC.hg38"))
+system("conda install -c conda-forge r-rgeos")
+
+install.packages("Seurat") 
+devtools::install_github('satijalab/seurat-data')
+remotes::install_github("mojaveazure/seurat-disk")
+
+install.packages("Signac") 
+install.packages('qlcMatrix')
+
