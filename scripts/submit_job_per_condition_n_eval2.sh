@@ -5,12 +5,14 @@
 #BSUB -o pytestdweise.%J.txt #Name of the job output file
 ### -- Default: use 8 cores --
 #BSUB -n 8
-### -- specify that we need 8GB of memory per core/slot --
 #BSUB -R "span[hosts=1]"
-### -- specify that we want the job to get killed if it exceeds 16 GB per core/slot --
+### -- specify that we need 8GB of memory per core/slot --
+#BSUB -R "rusage[mem=8GB]"
+### -- specify that we want the job to get killed if it exceeds 32 GB per core/slot --
 #BSUB -M 32GB
 ### -- send notification at completion --
 #BSUB -N
+
 
 
 ############################################################
