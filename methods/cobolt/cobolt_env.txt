@@ -4,7 +4,7 @@ conda create -n cobolt python=3.7
 
 conda activate cobolt
 
-# install git first for installing cobolt as a git repo (?)
+# install git first for installing cobolt as a git repo (v1.0.0)
 conda install -c anaconda git
 pip install git+https://github.com/boyinggong/cobolt.git#egg=cobolt
 pip install scanpy leidenalg ipykernel
