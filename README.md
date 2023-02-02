@@ -27,6 +27,6 @@ Installation (one conda environment is created for each method)
 Data simulation, evaluation, and plot generation are run after activating the scib2 environment. Details about environment setup can be ofund in the **methods/eval_scib2** folder. 
 
 ## Data 
-Proceesed source data and reference files used during data simulation and evaluations, as well as scripts to generate these files from raw dataset are in the **dataset** folder [coming soon]. 
+Proceesed source data and reference files used during data simulation and evaluations, as well as scripts to generate these files from raw dataset can be downloaded [here](https://upenn.box.com/s/jtua3rmmvzempjq55z4kj9xiij9dqoez). 
  
 
