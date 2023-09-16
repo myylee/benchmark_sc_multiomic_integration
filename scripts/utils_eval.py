@@ -27,17 +27,16 @@ def read_mtx_folder(dir_path,mod_key,var_list,obs_list):
     for i in var_list:
         var_v.append(pd.read_csv(os.path.join(dir_path,i+".tsv"),header=None))
     var_df = pd.concat(var_v, axis=1)
-    var_df.set_axis(var_list, axis='columns',inplace=True)
-    
+    var_df = var_df.set_axis(var_list, axis='columns')
     obs_v = []
     for i in obs_list:
         obs_v.append(pd.read_csv(os.path.join(dir_path,i+".tsv"),header=None))
     obs_df = pd.concat(obs_v, axis=1)
-    obs_df.set_axis(obs_list, axis='columns',inplace=True)
+    obs_df = obs_df.set_axis(obs_list, axis='columns')
     if(counts.shape[0]!=obs_df.shape[0]): counts=deepcopy(counts.transpose())
     adata = AnnData(counts,obs=obs_df,var=var_df)
-    adata.obs.set_axis(list(adata.obs["barcodes"]),axis="index",inplace=True)
-    adata.var.set_axis(list(adata.var[var_list[0]]),axis="index",inplace=True)
+    adata.obs = adata.obs.set_axis(list(adata.obs["barcodes"]),axis="index")
+    adata.var= adata.var.set_axis(list(adata.var[var_list[0]]),axis="index")
     adata.var["modality"] = mod_key
     return(adata)
         

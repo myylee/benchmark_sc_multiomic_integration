@@ -3,9 +3,9 @@
 #BSUB -J dweisepytest #LSF Job Name
 #BSUB -q mingyao_normal
 #BSUB -o pytestdweise.%J.txt #Name of the job output file
+###BSUB -e pytestdweise.%J.out #Name of the job error file
 ### -- Default: use 8 cores --
-#BSUB -n 8
-#BSUB -R "span[hosts=1]"
+#BSUB -n 2
 ### -- specify that we need 32GB of memory per core/slot --
 #BSUB -R "rusage[mem=32GB]"
 ### -- specify that we want the job to get killed if it exceeds 32 GB per core/slot --
@@ -14,14 +14,13 @@
 #BSUB -N
 
 
-
 ############################################################
 # Help                                                     #
 ############################################################
 Help()
 {
    # Display Help
-   echo "general script to run a python/R script (with two arguments) under a certain conda env"
+   echo "general script to run a python script (with two arguments) under a certain conda env"
    echo
    echo "Syntax: scriptTemplate [-i|w|c|s|p|r|e|f|t|l]"
    echo "options:"
@@ -87,39 +86,39 @@ echo "gene-pair truth list: $gp_truth";
 
 #module load R 
 source ~/anaconda3/etc/profile.d/conda.sh
-conda activate $conda_env
+# conda activate $conda_env
 
-echo "Conda env activated";
+# echo "Conda env activated";
 
-#create output directory if it doesn't exist 
-mkdir -p $out_dir
+# #create output directory if it doesn't exist 
+# mkdir -p $out_dir
 
 
-# white spaces in between everything! 
-if [[ $py == "true" ]] && [[ $r == "false" ]]
-then
-    echo "running a Python script."
-    python $script_path $in_dir $out_dir
-elif [[ $py == "false" ]] && [[ $r == "true" ]]
-then
-    echo "running a R script."
-    Rscript --vanilla $script_path $in_dir $out_dir $nclust
-else 
-    echo "please specify the language for the script to be run in, can either be python or r but not both or none."
-fi 
+# # white spaces in between everything! 
+# if [[ $py == "true" ]] && [[ $r == "false" ]]
+# then
+#     echo "running a Python script."
+#     python $script_path $in_dir $out_dir
+# elif [[ $py == "false" ]] && [[ $r == "true" ]]
+# then
+#     echo "running a R script."
+#     Rscript --vanilla $script_path $in_dir $out_dir $nclust
+# else 
+#     echo "please specify the language for the script to be run in, can either be python or r but not both or none."
+# fi 
 
 echo "Running evaluation";
-conda deactivate
+#conda deactivate
 conda activate scib2
 
-if [[ "$file_path" == *"seurat4"* ]] || [[ "$file_path" == *"liger"* ]] #|| [[ "$file_path" == *"scmomat"* ]]
-then
-    echo "Not clustering" 
-    python $eval_path $out_dir $file_path $ct_ref 
-else 
-    echo "Will cluster using latent embedding" 
-    python $eval_path $out_dir $file_path $ct_ref $nclust
-fi 
+# if [[ "$file_path" == *"seurat4"* ]] || [[ "$file_path" == *"liger"* ]]
+# then
+#     echo "Not clustering" 
+#     python $eval_path $out_dir $file_path $ct_ref 
+# else 
+#     echo "Will cluster using latent embedding" 
+#     python $eval_path $out_dir $file_path $ct_ref $nclust
+# fi 
 
 if [[ "$eval_path_gp" != "false" ]] || [[ "$gp_truth" != "false" ]]
 then

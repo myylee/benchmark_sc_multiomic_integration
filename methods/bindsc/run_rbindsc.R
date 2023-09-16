@@ -9,8 +9,6 @@ require(bindSC)
 source("r_utils.R")
 require(future)
 
-# Default: 8GB RAM shared
-
 run_rbindsc_fn <- function(in_dir, out_dir){
     # starting time
     t1 <- Sys.time()

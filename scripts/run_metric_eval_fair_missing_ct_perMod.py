@@ -20,75 +20,28 @@ from copy import deepcopy
 from numpy.random import choice
 subsample_size = lambda vector, size: choice(vector, size = size, replace = False) 
     
-def metrics(adata_plot, pred, truth, batch): 
-    # Clustering and annotation  quality 
-    # ARI
-    ari = scib.metrics.ari(adata_plot,pred,truth)
-    # NMI
-    nmi = scib.metrics.nmi(adata_plot,pred,truth)
-    
-    # Cell type ASW batch (cell types are separated)
-    ct_asw = scib.metrics.silhouette(adata_plot,truth,"embed")
-    
-    # LISI
-    lisi_res = scib.metrics.lisi.lisi_graph(adata_plot,batch,truth,type_="embed")
-    # cell type - cLSi (scaled to [0,1])
-    #clisi = scib.metrics.lisi.lisi_graph(adata_plot,batch,truth)[1]
-    clisi = lisi_res[1]
-    
-    # Batch removal 
-    # batch iLSi (scaled to [0,1]) [did not consider the size imbalance between batches]
-    ilisi = lisi_res[0]
+# find the max f1 for a given cell type
+# try all possible cluster corresponding to this ct 
+# record TP, FP, FN for each possible cluster id
+def f1_all(obs, pred, truth, ct_target):
+    """cluster optimizing over largest F1 score of isolated label"""
+    possible_cluster = obs.loc[obs[truth] == ct_target][pred].unique()
+    col_names = ['Cluster','N','TP','FP','FN','F1']
+    score = pd.DataFrame(index=range(len(possible_cluster)),columns=range(len(col_names)))
+    score.columns = col_names
+    for i in range(len(possible_cluster)):
+        cluster = possible_cluster[i]
+        print(cluster)
+        obs_sel = obs.loc[(obs[truth] == ct_target) | (obs[pred]==cluster)]
+        TP = sum((obs_sel[truth] == ct_target) & (obs_sel[pred] == cluster))
+        FP = sum((obs_sel[truth] != ct_target) & (obs_sel[pred] == cluster)) 
+        FN = sum((obs_sel[truth] == ct_target) & (obs_sel[pred] != cluster)) 
+        n = obs_sel.shape[0]
+        F1 = TP/(TP+0.5*(FP+FN))
+        score.loc[i,:] = [cluster,n,TP,FP,FN,F1]
+    score = score.sort_values('F1', ascending=False)
+    return score
 
-    # ASW - batch: batches are well mixed for each cell type
-    b_asw = scib.metrics.silhouette_batch(adata_plot, batch, truth,"embed")
-
-    #kBET (type_="knn"[for graph-based integration], type_=None [default, for joint_embed, or feature matrix])
-    kbet = scib.metrics.kBET(adata_plot,batch,truth,embed="embed")
-
-    # graph connectivity
-    gconn = scib.metrics.graph_connectivity(adata_plot, truth)
-    
-    # isolated cluster
-    # isolated labels - F1
-    iso_f1 = scib.metrics.isolated_labels(adata_plot, truth,batch,"embed",iso_threshold=2)
-    
-    # isolated labels - ASW
-    iso_asw = scib.metrics.isolated_labels(adata_plot, truth,batch,"embed",cluster=False,iso_threshold=2)
-
-    metrics = [ari, nmi, ct_asw, clisi, b_asw, ilisi, kbet, gconn, iso_f1, iso_asw]
-    
-    #metrics_tbl = tabulate(metrics, headers=["ARI", "NMI", "ct_aws","clisi","b_saw","ilisi","kbet","gconn","iso_f1","iso_asw"],floatfmt=".4f")
-    df = pd.DataFrame(metrics).T
-    df = df.set_axis(["ARI", "NMI", "ct_aws","clisi","b_saw","ilisi","kbet","gconn","iso_f1","iso_asw"],axis=1)
-    
-    return(df)
-
-def metrics_batch(adata_plot, pred, truth, batch):     
-    # LISI
-    lisi_res = scib.metrics.lisi.lisi_graph(adata_plot,batch,truth,type_="embed")
-    
-    # Batch removal 
-    # batch iLSi (scaled to [0,1]) [did not consider the size imbalance between batches]
-    ilisi = lisi_res[0]
-
-    # ASW - batch: batches are well mixed for each cell type
-    b_asw = scib.metrics.silhouette_batch(adata_plot, batch, truth, "embed")
-
-    #kBET (type_="knn"[for graph-based integration], type_=None [default, for joint_embed, or feature matrix])
-    kbet = scib.metrics.kBET(adata_plot,batch,truth,embed="embed")
-
-    # graph connectivity
-    gconn = scib.metrics.graph_connectivity(adata_plot, truth)
-    
-    metrics = [b_asw, ilisi, kbet, gconn]
-    
-    #metrics_tbl = tabulate(metrics, headers=["ARI", "NMI", "ct_aws","clisi","b_saw","ilisi","kbet","gconn","iso_f1","iso_asw"],floatfmt=".4f")
-    df = pd.DataFrame(metrics).T
-    df = df.set_axis(["batch_b_saw","batch_ilisi","batch_kbet","batch_gconn"],axis=1)
-    
-    return(df)
-    
 def latent_method_eval(out_dir,file_path,ct_ref,nclust=None):
     path = os.path.join(out_dir, file_path)
     res_df = pd.read_csv(path,index_col=0)
@@ -176,45 +129,54 @@ def latent_method_eval(out_dir,file_path,ct_ref,nclust=None):
     return(adata_plot_sel)
 
 
-def run_metric(out_dir,file_path,ct_ref,nclust=None):
+def run_metric(out_dir,file_path,ct_ref,rare_ct_path,nclust=None):
     if nclust is not None:
         nclust = int(nclust)
     adata_plot = latent_method_eval(out_dir,file_path,ct_ref,nclust)
-    
+
+    rare_ct_list = pd.read_csv(rare_ct_path,index_col=0).iloc[:,0].tolist()
     print("Metric calculated using this number of cells: ",str(adata_plot.shape[0]))
-    
+
+
     pred = 'predicted_ct'
     truth = 'cell_type'
     batch = 'dataset2'
+    print("Breakdown by dataset: ")
+    print(adata_plot.obs[batch].value_counts())
     # calculate all metric using the same number of categories for the dataset column - 3 categories. 
-    res = metrics(adata_plot,pred,truth,batch)
     res_dir, filename  = os.path.split(os.path.join(out_dir,file_path))
     key_splits = ct_ref.split('_')
     key = key_splits[len(key_splits)-1]
     key = str(key.split('.')[0])
-    print(key)
-    metric_path = os.path.join(res_dir, "{}_metric.csv".format(key)) 
-    print(metric_path)
-    res.to_csv(metric_path)
-    result_path = os.path.join(res_dir, "{}_result_obs.csv".format(key)) 
-    adata_plot.obs.to_csv(result_path)
+
+    obs = adata_plot.obs
+    for ct_i in rare_ct_list:
+        for mod in obs[batch].unique().tolist():
+            obs_i = obs[obs[batch] == mod]
+            ct_i_score = f1_all(obs_i,pred,truth,ct_i)
+            metric_path_i = os.path.join(res_dir, "{}_{}_{}_metric.csv".format(key,ct_i,mod)) 
+            ct_i_score.to_csv(metric_path_i)
     
 #===== Running codes ===== 
 print('Number of arguments:', len(sys.argv), 'arguments.')
 print('Argument List:'+ str(sys.argv))
 
-print("argument 1:",sys.argv[1])
-print("argument 2:",sys.argv[2])
-print("argument 3:",sys.argv[3])
+# zero-based indexing 
+# out_dir
+print("out_dir:",sys.argv[1])
+# file_path
+print("file_path:",sys.argv[2])
+# ct_ref
+print("ct_ref:",sys.argv[3])
+# rare_ct
+print("rare_ct_path:",sys.argv[4])
 
 
-if (len(sys.argv) == 5):
-    print("argument 4:",sys.argv[4])
-    cell_type = pd.read_csv(sys.argv[3],index_col=0)
-    print(cell_type)
-    run_metric(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4])
+if (len(sys.argv) == 6):
+    # nclust
+    print("nclust:",sys.argv[5])
+    run_metric(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],sys.argv[5])
 else:
-    run_metric(sys.argv[1],sys.argv[2],sys.argv[3])
+    run_metric(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4])
 
 print("-------Finished evaluation-------")
-

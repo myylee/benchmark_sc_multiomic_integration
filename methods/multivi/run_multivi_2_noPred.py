@@ -101,41 +101,10 @@ def run_multivi_fn(in_dir,out_dir):
     runtime_out = os.path.join(out_dir,"runtime","multivi_runtime.txt")
     print(stop - start,  file=open(runtime_out, 'w'))
     print("------ Done ------")
-    print("------ Prediction ------")
-    start = timeit.default_timer()
-    # get imputated gene expression 
-    imputed_expression = mvi.get_normalized_expression()
-    rna_pred = AnnData(imputed_expression,
-                       obs=deepcopy(adata_mvi.obs),
-                       var=adata_mvi.var[adata_mvi.var['modality']=="Gene Expression"])
-    rna_pred.var['feature'] = list(rna_pred.var.index)
-    # select for cells in multiome and snATAC datasets 
-    idx_keep = list(rna_pred.obs['modality'].isin(["paired","accessibility"]))
-    # subset the imputed gene expression for the selected cells 
-    rna_pred_save = rna_pred[idx_keep,]
-    
-    # select for cells in multiome and snATAC dataset
-    idx_keep = list(adata_mvi.obs['modality'].isin(["paired","accessibility"]))
-    # subset the peak matrix 
-    adata_atac_save = adata_mvi[idx_keep,list(adata_mvi.var['modality']  == "Peaks")]
-    adata_atac_save.var['feature'] = list(adata_atac_save.var.index)
-
-    # save the original peak matrix and imputed gene expression matrix in "predicted" folder 
-    write_adata(rna_pred_save,  os.path.join(out_dir,"multivi","predicted","RNA"),
-                           "RNA","gene",bc="barcodes",feature_name='feature',transpose=True)
-    write_adata(adata_atac_save, os.path.join(out_dir,"multivi","predicted","ATAC"),
-                           "ATAC","peak",bc="barcodes",feature_name='feature',transpose=True)
-
-    stop = timeit.default_timer()
-    print('Time(s): ', stop - start)  
-    # save prediction time 
-    prediction_time_out = os.path.join(out_dir, "runtime","multivi_prediction_time.txt")
-    print(stop - start,  file=open(prediction_time_out, 'w'))
-    print("------ Prediction Done ------")
+    print("------ No prediction ------")
     return(mvi)
 
 print("argument 1:",sys.argv[1])
 print("argument 2:",sys.argv[2])
 
 mvi = run_multivi_fn(sys.argv[1],sys.argv[2])
-

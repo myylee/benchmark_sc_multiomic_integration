@@ -1,6 +1,6 @@
 # command line
 
-conda create -n seurat r-essentials r-base
+conda create -n azimuth r-essentials r-base
 
 conda activate seurat
 

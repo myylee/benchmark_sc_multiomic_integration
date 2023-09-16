@@ -38,6 +38,7 @@ Help()
    echo "l     number of clusters"
    echo "a     path to R script that performs gene-peak association using the predicted gene/peak expression"
    echo "b     path to gene-peak association pair list, or false if no association to be evaluated"
+   echo "g     path to file storing the rare cell types being evaluated in this script (must be present, no default)"
    echo
 }
 
@@ -51,7 +52,7 @@ py="false"
 r="false"
 
 #  If a character is followed by a colon (e.g. f:), that option is expected to have an argument. thus here, p and r are not expected to have an argument.
-while getopts i:w:c:s:pre:f:m:t:l:a:b: flag
+while getopts i:w:c:s:pre:f:m:t:l:a:b:g: flag
 do
     case "${flag}" in
         i) in_dir=${OPTARG};;
@@ -67,6 +68,7 @@ do
         l) nclust=${OPTARG};;
         a) eval_path_gp=${OPTARG};;
         b) gp_truth=${OPTARG};;
+        g) rare_ct_path=${OPTARG};;
     esac
 done
 
@@ -84,6 +86,7 @@ echo "Cell type reference path: $ct_ref";
 echo "nclust: $nclust";
 echo "gene-pair eval script: $eval_path_gp";
 echo "gene-pair truth list: $gp_truth";
+echo "path to rare cell type list: $rare_ct_path";
 
 #module load R 
 source ~/anaconda3/etc/profile.d/conda.sh
@@ -112,13 +115,13 @@ echo "Running evaluation";
 conda deactivate
 conda activate scib2
 
-if [[ "$file_path" == *"seurat4"* ]] || [[ "$file_path" == *"liger"* ]] #|| [[ "$file_path" == *"scmomat"* ]]
+if [[ "$file_path" == *"seurat4"* ]] || [[ "$file_path" == *"liger"* ]]
 then
     echo "Not clustering" 
-    python $eval_path $out_dir $file_path $ct_ref 
+    python $eval_path $out_dir $file_path $ct_ref $rare_ct_path
 else 
     echo "Will cluster using latent embedding" 
-    python $eval_path $out_dir $file_path $ct_ref $nclust
+    python $eval_path $out_dir $file_path $ct_ref $rare_ct_path $nclust
 fi 
 
 if [[ "$eval_path_gp" != "false" ]] || [[ "$gp_truth" != "false" ]]
@@ -126,7 +129,7 @@ then
     echo "Evaluating predicted profiles"
     Rscript --vanilla $eval_path_gp $in_dir $out_dir $method_key $gp_truth
 else 
-    echo "Note evaluating predicted profiles, END!"
+    echo "Not evaluating predicted profiles, END!"
 fi  
     
 

@@ -1,0 +1,10 @@
+# command line
+conda create -n scmomat python=3.8.10
+
+conda activate scmomat
+
+pip install scmomat
+
+pip install scanpy leidenalg ipykernel
+
+python -m ipykernel install --user --name scmomat --display-name "scmomat"

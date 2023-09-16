@@ -1,0 +1,40 @@
+# command line
+
+# try installing glue again 
+conda create -n glue2 python=3.8
+
+conda activate glue2
+
+# install using pip instead of condo 
+pip install scglue
+
+pip install leidenalg ipykernel
+
+python -m ipykernel install --user --name glue2 --display-name "glue2"
+
+conda install -c pytorch faiss-cpu
+
+pip install numpy==1.23.5
+
+# glue_gpu 
+
+conda create --name glue_gpu --clone glue2
+conda activate glue_gpu
+conda install -c conda-forge -c bioconda pytorch-gpu
+python -m ipykernel install --user --name glue_gpu --display-name "glue_gpu"
+
+# try installing glue_gpu again 
+conda create -n glueGPU python=3.8
+
+conda activate glueGPU
+
+conda install -c conda-forge -c bioconda scglue pytorch-gpu  # With GPU support
+
+pip install leidenalg ipykernel
+
+python -m ipykernel install --user --name glueGPU --display-name "glueGPU"
+
+conda install -c pytorch faiss-gpu
+
+# pip install numpy==1.23.5
+

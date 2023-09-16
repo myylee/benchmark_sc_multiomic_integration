@@ -1,4 +1,6 @@
 #!/usr/bin/python
+# assign batch based on cell barcodes. Instead of blindly assigning single-modality datasets to one batch and multiome to another. 
+# Applied for situations where the multiome is formed of multiple batches and when scRNA and snATAC are from different batch
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
@@ -16,10 +18,10 @@ import anndata as ad
 os.environ['R_HOME'] = '/home/myylee/anaconda3/envs/scib2/lib/R/'
 import scib
 from copy import deepcopy
-
+import re
 from numpy.random import choice
 subsample_size = lambda vector, size: choice(vector, size = size, replace = False) 
-    
+
 def metrics(adata_plot, pred, truth, batch): 
     # Clustering and annotation  quality 
     # ARI
@@ -196,6 +198,15 @@ def run_metric(out_dir,file_path,ct_ref,nclust=None):
     metric_path = os.path.join(res_dir, "{}_metric.csv".format(key)) 
     print(metric_path)
     res.to_csv(metric_path)
+    
+    batch2 = 'batch'
+    # get donor annotation through separating by "-" and take the middle one. stri example:"scrna-HPAP103-ATCA-1"
+    adata_plot.obs['batch'] = [stri.split("-")[1] for stri in adata_plot.obs.index.tolist()]
+    adata_plot.obs['batch'] = adata_plot.obs['batch'].astype("category")
+    print(adata_plot.obs['batch'].value_counts())
+    res_batch = metrics_batch(adata_plot,pred,truth,batch2)
+    metric_path2 = os.path.join(res_dir, "{}_metric_sample_batch.csv".format(key)) 
+    res_batch.to_csv(metric_path2)
     result_path = os.path.join(res_dir, "{}_result_obs.csv".format(key)) 
     adata_plot.obs.to_csv(result_path)
     

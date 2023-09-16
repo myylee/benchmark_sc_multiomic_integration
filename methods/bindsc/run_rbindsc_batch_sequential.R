@@ -9,44 +9,65 @@ require(bindSC)
 source("r_utils.R")
 require(future)
 
-
 run_rbindsc_fn <- function(in_dir, out_dir){
     # starting time
     t1 <- Sys.time()
-    n_lat = 30
-    plan("multisession")
-    options(future.rng.onMisue = "ignore")
-    print(paste0("workers used:",nbrOfWorkers()))
+#     n_lat = 30
+#     plan("multisession")
+#     options(future.rng.onMisue = "ignore")
+#     print(paste0("workers used:",nbrOfWorkers()))
+#     options(future.globals.maxSize = 8000 * 1024^2)
     
-    datasets = load_datasets(in_dir)
-    print("loading single modality datasets only, ignoring paired RNA and paired ATAC folder")
+    datasets = load_datasets(in_dir,obs=c("barcodes","batch"))
+    paired_rna=datasets$paired_rna
+    paired_atac=datasets$paired_atac
     unpaired_rna=datasets$unpaired_rna
     unpaired_atac=datasets$unpaired_atac
 
-    # print number of cells per data type
-    dataset_vec <- rep(c("scRNA","snATAC"),
-                       c(ncol(unpaired_rna),
-                         ncol(unpaired_atac)))
+    dataset_vec <- rep(c("scRNA","snATAC","Multiome-RNA","Multiome-ATAC"),
+                   c(ncol(unpaired_rna),
+                     ncol(unpaired_atac),
+                     ncol(paired_rna),
+                    ncol(paired_atac)))
     names(dataset_vec) <- c(paste0(colnames(unpaired_rna)),
-                            paste0(colnames(unpaired_atac)))
+                            paste0(colnames(unpaired_atac)),
+                            paste0("prna_",colnames(paired_rna)),
+                            paste0("patac_",colnames(paired_atac)))
     print(table(dataset_vec))
     
-    unpaired_atac@meta.data$dataset <- "snATAC"
-    unpaired_rna@meta.data$dataset <- "scRNA"
-    
-    # merging
-    #unpaired_rna <- merge(unpaired_rna,paired_rna, add.cell.ids = c("urna", "prna"))
-    #unpaired_atac <- merge(unpaired_atac,paired_atac, add.cell.ids = c("uatac", "patac"))
+    paired_rna <- RenameCells(paired_rna,add.cell.id = "prna",for.merge = FALSE)
+    paired_atac <- RenameCells(paired_atac,add.cell.id = "patac",for.merge = FALSE)
 
+    # merging
+    unpaired_rna@meta.data$technology = "scRNA"
+    unpaired_atac@meta.data$technology = "snATAC"
+    paired_rna@meta.data$technology = "Multiome-RNA"
+    paired_atac@meta.data$technology = "Multiome-ATAC"
+    
+    unpaired_rna <- merge(unpaired_rna,paired_rna)
+    unpaired_atac <- merge(unpaired_atac,paired_atac)
+    
+    unpaired_rna@meta.data$group <- paste0(unpaired_rna$batch,"_",unpaired_rna$technology)
+    
     DefaultAssay(unpaired_rna) <- "RNA"
     unpaired_rna <- NormalizeData(unpaired_rna)
-    unpaired_rna <- FindVariableFeatures(unpaired_rna, nfeatures = 5000)
-    unpaired_rna <- ScaleData(unpaired_rna)
-    unpaired_rna <- RunPCA(unpaired_rna)
+    rna.list <- SplitObject(unpaired_rna, split.by = "group")
+    
+    #select high variable features across samples (assume cells have been normalized by library size, does not need to be sample-specific)
+    features = SelectIntegrationFeatures(
+      rna.list,
+      nfeatures = 5000,
+      verbose = TRUE,
+      fvf.nfeatures = 10000,
+    )
+    unpaired_rna@assays$RNA@var.features = features
+    unpaired_rna <- ScaleData(unpaired_rna,features=features,split.by='group')
+    unpaired_rna <- RunPCA(unpaired_rna,features=features)
     unpaired_rna <- FindNeighbors(unpaired_rna, dims = 1:20, reduction = "pca")
     unpaired_rna <- FindClusters(unpaired_rna, resolution = 0.5)
     unpaired_rna <- RunUMAP(unpaired_rna, reduction = "pca", dims = 1:15)
 
+    
     # quantify gene activity
     gene.activities <- GeneActivity(unpaired_atac, features = VariableFeatures(unpaired_rna))
     # add gene activities as a new assay
@@ -65,13 +86,13 @@ run_rbindsc_fn <- function(in_dir, out_dir){
     DefaultAssay(unpaired_atac) <- "ACTIVITY"
     gene.use <- intersect(VariableFeatures(unpaired_rna), 
                           VariableFeatures(unpaired_atac))
-    
+    # getting normalized counts (@data field)
     X <- unpaired_rna[["RNA"]][gene.use,]
     Y <- unpaired_atac[["ATAC"]][]
     Z0 <- unpaired_atac[["ACTIVITY"]][gene.use]
     type <- c(rep("RNA", ncol(X)), rep("ATAC", ncol(X)))
 
-    a <- rowSums(as.matrix(Y))
+    a <- rowSums(Y)
     Y <- Y[a>50,]
     
     out <- dimReduce(dt1 =  X, dt2 = Z0,  K = 30)
@@ -111,25 +132,26 @@ run_rbindsc_fn <- function(in_dir, out_dir){
                 col.names = FALSE)
     print("------ Done ------")
     
-    print("------ Prediction ------")
-    # starting time
-    t1 <- Sys.time()
-    # prediction
-    Z_impu <- impuZ(X=unpaired_rna[["RNA"]][gene.use,], bicca = res)
-    # whole range normalization, ran in plot_geneScoreChange 
-    Z_impu_norm<- (Z_impu-min(Z_impu))/(max(Z_impu)-min(Z_impu))
-    unpaired_atac[['RNA_impute']] <- CreateAssayObject(counts=Z_impu_norm)
+    print("------ No prediction ------")
+#     # starting time
+#     t1 <- Sys.time()
+#     # prediction
+#     Z_impu <- impuZ(X=unpaired_rna[["RNA"]][gene.use,], bicca = res)
+#     # whole range normalization, ran in plot_geneScoreChange 
+#     Z_impu_norm<- (Z_impu-min(Z_impu))/(max(Z_impu)-min(Z_impu))
+#     unpaired_atac[['RNA_impute']] <- CreateAssayObject(counts=Z_impu_norm)
 
-    write_mtx_folder(file.path(out_dir,"rbindsc","predicted/ATAC/"),unpaired_atac,assay_key="ATAC",slot_key="counts","peak")
-    write_mtx_folder(file.path(out_dir,"rbindsc","predicted/RNA/"),unpaired_atac,assay_key="RNA_impute",slot_key="counts","gene")
+#     # saved cell name will be "barcodes" column in object@meta.data
+#     write_mtx_folder(file.path(out_dir,"rbindsc","predicted","ATAC"),unpaired_atac,assay_key="ATAC",slot_key="counts","peak")
+#     write_mtx_folder(file.path(out_dir,"rbindsc","predicted","RNA"),unpaired_atac,assay_key="RNA_impute",slot_key="counts","gene")
     
-    t2 <- Sys.time()
-    write.table(difftime(t2, t1, units = "secs")[[1]], 
-                file = file.path(out_dir,"runtime","rbindsc_prediction_time.txt"), 
-                sep = "\t",
-                row.names = FALSE,
-                col.names = FALSE)
-    print("------ Prediction Done ------")
+#     t2 <- Sys.time()
+#     write.table(difftime(t2, t1, units = "secs")[[1]], 
+#                 file = file.path(out_dir,"runtime","rbindsc_prediction_time.txt"), 
+#                 sep = "\t",
+#                 row.names = FALSE,
+#                 col.names = FALSE)
+#     print("------ Prediction Done ------")
 
 }
 
