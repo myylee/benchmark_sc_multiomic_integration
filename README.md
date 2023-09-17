@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/580110879.svg)](https://zenodo.org/badge/latestdoi/580110879)
+
 # Benchmarking algorithms for joint integration of unpaired and paired single-cell RNA-seq and ATAC-seq data
 **Michelle Y. Y. Lee, Klaus H. Kaestner, Mingyao Li**
 
